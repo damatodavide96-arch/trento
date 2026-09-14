@@ -576,6 +576,15 @@ export default function App() {
     if (inputFile.current) inputFile.current.value = '';
   }
 
+  // Chiude il percorso e riporta in cima con tutti i campi da ricompilare.
+  function completaERicompila() {
+    setDati(ANAGRAFICA_VUOTA);
+    setDatiConfermati(false);
+    setErroriDati({});
+    ricomincia();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <div
       className="relative min-h-screen flex flex-col overflow-hidden"
@@ -1230,6 +1239,14 @@ export default function App() {
                       style={STILE_CHIARO}
                     >
                       + Aggiungi socio
+                    </button>
+
+                    <button
+                      onClick={completaERicompila}
+                      className="mt-5 w-full text-center text-white text-sm px-7 py-3 rounded-full transition-all duration-200 hover:opacity-90 shadow-lg"
+                      style={STILE_SCURO}
+                    >
+                      Completa e invia richiesta
                     </button>
                   </div>
                 )}

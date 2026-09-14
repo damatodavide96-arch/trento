@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# La SPA: tutte le rotte non-file tornano a index.html.
+# Le Functions restano su /.netlify/functions/* e non vengono intercettate.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

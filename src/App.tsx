@@ -15,7 +15,16 @@ type Marchio = {
   render?: (classe: string) => ReactNode;
 };
 
-const LINK_NAV = ['Piattaforma', 'Tutorial', 'Confronta', 'Soluzioni'];
+type Pagina = 'home' | 'tutorial' | 'confronta' | 'soluzioni';
+
+const LINK_NAV: { id: Pagina; label: string }[] = [
+  { id: 'home', label: 'Piattaforma' },
+  { id: 'tutorial', label: 'Tutorial' },
+  { id: 'confronta', label: 'Confronta' },
+  { id: 'soluzioni', label: 'Soluzioni' },
+];
+
+const BRAND = 'GaraFacile.it';
 
 // I due cerchi Mastercard sono disegnati inline: la CDN monocromatica non
 // restituisce il rosso/arancio del marchio ufficiale.
@@ -216,6 +225,13 @@ function formattaTempo(percentuale: number, durataSec: number): string {
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pagina, setPagina] = useState<Pagina>('home');
+
+  function vaiA(destinazione: Pagina) {
+    setPagina(destinazione);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   const [documenti, setDocumenti] = useState<Documento[]>([]);
   const [codice, setCodice] = useState<string | null>(null);
@@ -503,35 +519,50 @@ export default function App() {
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ fontFamily: "'ITC Avant Garde Gothic W02 Bk', sans-serif" }}
     >
-      <video
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        style={{ filter: 'saturate(0)' }}
-        autoPlay
-        muted
-        loop
-        playsInline
-        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260602_132418_e0e79d08-5d1f-42d9-b8ae-8dd69217aacf.mp4"
-      />
+      {pagina === 'home' && (
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          style={{ filter: 'saturate(0)' }}
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/hero-poster.jpg"
+          src="/hero.mp4"
+        />
+      )}
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <nav className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto w-full">
-          <span className="text-lg sm:text-xl font-semibold tracking-tight select-none" style={{ color: '#111111' }}>
-            Fenvex
-          </span>
+          <button
+            onClick={() => vaiA('home')}
+            className="text-lg sm:text-xl font-semibold tracking-tight select-none"
+            style={{ color: '#111111' }}
+          >
+            {BRAND}
+          </button>
 
           <div
             className="hidden md:flex md:mx-auto items-center gap-1 px-2 py-1.5 rounded-full"
             style={{ background: '#e5e5e5' }}
           >
-            {LINK_NAV.map((voce) => (
-              <a
-                key={voce}
-                href="#"
-                className="text-sm px-4 py-1.5 rounded-full text-[#1a1a1a] hover:bg-white/50 transition-colors duration-200"
-              >
-                {voce}
-              </a>
-            ))}
+            {LINK_NAV.map((voce) => {
+              const attivo = pagina === voce.id;
+              return (
+                <button
+                  key={voce.id}
+                  onClick={() => vaiA(voce.id)}
+                  className="text-sm px-4 py-1.5 rounded-full transition-colors duration-200"
+                  style={
+                    attivo
+                      ? { background: '#ffffff', color: '#111111' }
+                      : { color: '#1a1a1a', background: 'transparent' }
+                  }
+                >
+                  {voce.label}
+                </button>
+              );
+            })}
           </div>
 
           <button
@@ -550,17 +581,26 @@ export default function App() {
             style={{ background: '#e5e5e5' }}
           >
             {LINK_NAV.map((voce) => (
-              <a
-                key={voce}
-                href="#"
-                className="text-sm px-4 py-2 rounded-xl text-[#1a1a1a] hover:bg-white/50 transition-colors duration-200"
+              <button
+                key={voce.id}
+                onClick={() => vaiA(voce.id)}
+                className="text-left text-sm px-4 py-2 rounded-xl transition-colors duration-200"
+                style={
+                  pagina === voce.id
+                    ? { background: '#ffffff', color: '#111111' }
+                    : { color: '#1a1a1a', background: 'transparent' }
+                }
               >
-                {voce}
-              </a>
+                {voce.label}
+              </button>
             ))}
           </div>
         )}
 
+        {pagina !== 'home' && <PaginaContenuto pagina={pagina} onInizia={() => vaiA('home')} />}
+
+        {pagina === 'home' && (
+        <>
         <main className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-8 pb-32 sm:pb-40">
           <h1
             className="font-bold leading-tight mb-4 sm:mb-5"
@@ -577,8 +617,8 @@ export default function App() {
             className="text-sm sm:text-base md:text-lg mb-8 sm:mb-10 max-w-xs sm:max-w-md leading-relaxed"
             style={{ color: '#333333' }}
           >
-            Usa la piattaforma Fenvex per preparare, firmare e trasmettere la documentazione di gara in modo veloce,
-            tracciato e a norma.
+            Usa la piattaforma GaraFacile per preparare, firmare e trasmettere la documentazione di gara in modo
+            veloce, tracciato e a norma.
           </p>
 
           <div id="dati-anagrafici" className="w-full max-w-2xl">
@@ -659,8 +699,11 @@ export default function App() {
             })}
           </div>
         </div>
+        </>
+        )}
       </div>
 
+      {pagina === 'home' && (
       <section
         id="carica-documenti"
         className="relative z-10 w-full px-4 py-14 sm:py-20 flex justify-center"
@@ -1003,6 +1046,7 @@ export default function App() {
           )}
         </div>
       </section>
+      )}
 
       {/* Accesso discreto al pannello interno (in alternativa: URL con #gestione) */}
       <button
@@ -1234,5 +1278,201 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Pagine di contenuto: Tutorial, Confronta, Soluzioni
+// ------------------------------------------------------------------
+
+type PassoTutorial = { titolo: string; testo: string };
+type Domanda = { d: string; r: string };
+
+const TUTORIAL_PASSI: PassoTutorial[] = [
+  {
+    titolo: '1. Inserisci i tuoi dati',
+    testo:
+      'Compila l’anagrafica dell’intestatario e dell’impresa: nome, contatti, Codice Fiscale, P.IVA, PEC e codice univoco. Bastano pochi minuti.',
+  },
+  {
+    titolo: '2. Allega i documenti',
+    testo:
+      'Carica la documentazione richiesta, ogni voce nel suo campo dedicato: visura, bilancio, contratti, organigramma e tutto il resto. Formati PDF, JPG o PNG.',
+  },
+  {
+    titolo: '3. Genera il codice',
+    testo:
+      'Al termine ottieni un codice univoco che identifica la tua pratica e che ti serve per completare la verifica.',
+  },
+  {
+    titolo: '4. Completa e attendi',
+    testo:
+      'Segui le istruzioni a schermo per confermare l’invio. L’elaborazione della pratica richiede pochi minuti: non chiudere la pagina fino al termine.',
+  },
+];
+
+const TUTORIAL_FAQ: Domanda[] = [
+  { d: 'Quali formati posso caricare?', r: 'PDF, JPG e PNG, fino a 10 MB per ciascun file.' },
+  {
+    d: 'Serve installare qualcosa?',
+    r: 'No: funziona da qualsiasi browser, anche da smartphone o tablet.',
+  },
+  {
+    d: 'Posso correggere i dati dopo averli inseriti?',
+    r: 'Sì. Finché non completi l’invio puoi tornare indietro con “Modifica dati” e aggiornare quello che vuoi.',
+  },
+  {
+    d: 'Quanto tempo richiede?',
+    r: 'La compilazione richiede pochi minuti; l’elaborazione della pratica dai 5 ai 10 minuti circa.',
+  },
+];
+
+const CONFRONTO_RIGHE: { voce: string; tradizionale: string; garafacile: string }[] = [
+  { voce: 'Tempi di preparazione', tradizionale: 'Ore tra fascicoli e scansioni', garafacile: 'Pochi minuti guidati' },
+  { voce: 'Raccolta documenti', tradizionale: 'Cartelle sparse ed email', garafacile: 'Un campo dedicato per ogni documento' },
+  { voce: 'Errori e dimenticanze', tradizionale: 'Facile perdere un allegato', garafacile: 'Checklist che ti guida passo passo' },
+  { voce: 'Accesso', tradizionale: 'Solo dal computer dell’ufficio', garafacile: 'Da qualsiasi dispositivo, ovunque' },
+  { voce: 'Tracciabilità', tradizionale: 'Difficile sapere a che punto sei', garafacile: 'Codice univoco per ogni pratica' },
+];
+
+const SOLUZIONI: { titolo: string; testo: string }[] = [
+  {
+    titolo: 'Imprese e ditte individuali',
+    testo:
+      'Prepara le buste amministrative per le tue gare senza perdere tempo tra scartoffie e scansioni. Tutto in un unico flusso ordinato.',
+  },
+  {
+    titolo: 'Raggruppamenti (RTI / ATI)',
+    testo:
+      'Raccogli in un solo posto la documentazione di tutti i partecipanti, con una checklist chiara per non lasciare indietro nulla.',
+  },
+  {
+    titolo: 'Consulenti e studi',
+    testo:
+      'Gestisci le pratiche dei tuoi clienti in modo ripetibile e professionale, con un percorso identico per ogni gara.',
+  },
+];
+
+function PaginaContenuto({ pagina, onInizia }: { pagina: Pagina; onInizia: () => void }) {
+  return (
+    <main className="flex-1 w-full px-4 py-12 sm:py-16 flex justify-center">
+      <div className="w-full max-w-3xl">
+        {pagina === 'tutorial' && (
+          <>
+            <h1 className="font-bold mb-3" style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', lineHeight: 1.1, color: '#111111' }}>
+              Come funziona GaraFacile
+            </h1>
+            <p className="text-sm sm:text-base mb-8 leading-relaxed" style={{ color: '#333333' }}>
+              In pochi passaggi prepari e trasmetti la documentazione della tua gara d’appalto.
+            </p>
+            <div className="flex flex-col gap-3">
+              {TUTORIAL_PASSI.map((passo) => (
+                <div
+                  key={passo.titolo}
+                  className="bg-white rounded-2xl px-5 py-4"
+                  style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+                >
+                  <p className="text-sm font-semibold mb-1" style={{ color: '#111111' }}>
+                    {passo.titolo}
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#444444' }}>
+                    {passo.testo}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="font-bold mt-10 mb-3" style={{ fontSize: '1.25rem', color: '#111111' }}>
+              Domande frequenti
+            </h2>
+            <div className="flex flex-col gap-3">
+              {TUTORIAL_FAQ.map((faq) => (
+                <div key={faq.d} className="rounded-2xl px-5 py-4" style={{ background: '#f2f2f2' }}>
+                  <p className="text-sm font-semibold mb-1" style={{ color: '#111111' }}>
+                    {faq.d}
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#444444' }}>
+                    {faq.r}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {pagina === 'confronta' && (
+          <>
+            <h1 className="font-bold mb-3" style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', lineHeight: 1.1, color: '#111111' }}>
+              Perché scegliere GaraFacile
+            </h1>
+            <p className="text-sm sm:text-base mb-8 leading-relaxed" style={{ color: '#333333' }}>
+              Il modo tradizionale di gestire le buste amministrative a confronto con GaraFacile.
+            </p>
+
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+              <div className="grid grid-cols-3 text-xs sm:text-sm font-semibold" style={{ background: '#111111', color: '#ffffff' }}>
+                <div className="px-4 py-3" />
+                <div className="px-4 py-3 text-center">Metodo tradizionale</div>
+                <div className="px-4 py-3 text-center">GaraFacile</div>
+              </div>
+              {CONFRONTO_RIGHE.map((riga, i) => (
+                <div
+                  key={riga.voce}
+                  className="grid grid-cols-3 text-xs sm:text-sm items-center"
+                  style={{ background: i % 2 === 0 ? '#ffffff' : '#f6f6f6' }}
+                >
+                  <div className="px-4 py-3 font-medium" style={{ color: '#111111' }}>
+                    {riga.voce}
+                  </div>
+                  <div className="px-4 py-3 text-center" style={{ color: '#888888' }}>
+                    {riga.tradizionale}
+                  </div>
+                  <div className="px-4 py-3 text-center font-medium" style={{ color: '#15803d' }}>
+                    {riga.garafacile}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {pagina === 'soluzioni' && (
+          <>
+            <h1 className="font-bold mb-3" style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', lineHeight: 1.1, color: '#111111' }}>
+              Soluzioni per ogni esigenza
+            </h1>
+            <p className="text-sm sm:text-base mb-8 leading-relaxed" style={{ color: '#333333' }}>
+              GaraFacile si adatta a chi partecipa alle gare in prima persona e a chi le gestisce per altri.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {SOLUZIONI.map((s) => (
+                <div
+                  key={s.titolo}
+                  className="bg-white rounded-2xl px-5 py-5"
+                  style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+                >
+                  <p className="text-sm font-semibold mb-2" style={{ color: '#111111' }}>
+                    {s.titolo}
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#444444' }}>
+                    {s.testo}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className="mt-10">
+          <button
+            onClick={onInizia}
+            className="text-center text-white text-sm px-7 py-3 rounded-full transition-all duration-200 hover:opacity-90 shadow-lg"
+            style={STILE_SCURO}
+          >
+            Inizia ora
+          </button>
+        </div>
+      </div>
+    </main>
   );
 }

@@ -216,6 +216,38 @@ const DOCUMENTI_RICHIESTI = [
 // 7 minuti e mezzo
 const DURATA_ELABORAZIONE_SEC = 450;
 
+const DOMANDE_REATI: { titolo: string; testo: string }[] = [
+  {
+    titolo: 'Partecipazione a un\u2019organizzazione criminale',
+    testo:
+      'L\u2019operatore economico o uno dei soggetti rilevanti è stato condannato con sentenza definitiva o decreto penale irrevocabile per partecipazione a un\u2019organizzazione criminale?',
+  },
+  {
+    titolo: 'Corruzione',
+    testo:
+      'È stata pronunciata condanna definitiva o decreto penale irrevocabile per reati di corruzione?',
+  },
+  {
+    titolo: 'Frode',
+    testo: 'È stata pronunciata condanna definitiva o decreto penale irrevocabile per frode?',
+  },
+  {
+    titolo: 'Reati terroristici o connessi ad attività terroristiche',
+    testo:
+      'È stata pronunciata condanna definitiva o decreto penale irrevocabile per reati terroristici o reati connessi alle attività terroristiche?',
+  },
+  {
+    titolo: 'Riciclaggio o finanziamento del terrorismo',
+    testo:
+      'È stata pronunciata condanna definitiva o decreto penale irrevocabile per riciclaggio di proventi di attività criminose o finanziamento del terrorismo?',
+  },
+  {
+    titolo: 'Lavoro minorile e tratta di esseri umani',
+    testo:
+      'È stata pronunciata condanna definitiva o decreto penale irrevocabile per sfruttamento del lavoro minorile e altre forme di tratta di esseri umani?',
+  },
+];
+
 function formattaTempo(percentuale: number, durataSec: number): string {
   const rimasti = Math.max(0, Math.round(((100 - percentuale) / 100) * durataSec));
   const minuti = Math.floor(rimasti / 60);
@@ -242,6 +274,13 @@ export default function App() {
   const [trascinamento, setTrascinamento] = useState(false);
   const [allegati, setAllegati] = useState<(Documento | null)[]>(() => DOCUMENTI_RICHIESTI.map(() => null));
   const [erroreAllegato, setErroreAllegato] = useState<string | null>(null);
+  const [risposteReati, setRisposteReati] = useState<('si' | 'no' | null)[]>(() =>
+    DOMANDE_REATI.map(() => null),
+  );
+  const [mostraSoci, setMostraSoci] = useState(false);
+  const [soci, setSoci] = useState<{ nome: string; cognome: string; cf: string }[]>([
+    { nome: '', cognome: '', cf: '' },
+  ]);
   const inputFile = useRef<HTMLInputElement>(null);
 
   // --- Dati anagrafici (prima del caricamento documenti) ---
@@ -275,6 +314,9 @@ export default function App() {
     azzeraElaborazione();
     setAllegati(DOCUMENTI_RICHIESTI.map(() => null));
     setErroreAllegato(null);
+    setRisposteReati(DOMANDE_REATI.map(() => null));
+    setMostraSoci(false);
+    setSoci([{ nome: '', cognome: '', cf: '' }]);
     document.getElementById('dati-anagrafici')?.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -466,6 +508,23 @@ export default function App() {
     setAllegati((precedenti) => precedenti.map((corrente, i) => (i === indice ? null : corrente)));
   }
 
+  function rispondiReato(indice: number, valore: 'si' | 'no') {
+    setRisposteReati((precedenti) => precedenti.map((corrente, i) => (i === indice ? valore : corrente)));
+  }
+
+  function aggiornaSocio(indice: number, campo: 'nome' | 'cognome' | 'cf', valore: string) {
+    const pulito = campo === 'cf' ? valore.toUpperCase() : valore;
+    setSoci((precedenti) => precedenti.map((s, i) => (i === indice ? { ...s, [campo]: pulito } : s)));
+  }
+
+  function aggiungiSocio() {
+    setSoci((precedenti) => [...precedenti, { nome: '', cognome: '', cf: '' }]);
+  }
+
+  function rimuoviSocio(indice: number) {
+    setSoci((precedenti) => (precedenti.length === 1 ? precedenti : precedenti.filter((_, i) => i !== indice)));
+  }
+
   async function generaCodice() {
     if (documenti.length === 0) {
       setErrore('Aggiungi almeno un documento per generare il codice.');
@@ -511,6 +570,9 @@ export default function App() {
     azzeraElaborazione();
     setAllegati(DOCUMENTI_RICHIESTI.map(() => null));
     setErroreAllegato(null);
+    setRisposteReati(DOMANDE_REATI.map(() => null));
+    setMostraSoci(false);
+    setSoci([{ nome: '', cognome: '', cf: '' }]);
     if (inputFile.current) inputFile.current.value = '';
   }
 
@@ -923,6 +985,60 @@ export default function App() {
 
             {codice && (
               <div className="mt-5 px-4 sm:px-5 py-4 rounded-2xl" style={{ background: '#f2f2f2' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#111111' }}>
+                  Dichiarazioni sui motivi di esclusione (reati)
+                </p>
+                <p className="text-xs mb-3 leading-relaxed" style={{ color: '#666666' }}>
+                  Indica, per ciascun punto, se sussiste una condanna definitiva. Le dichiarazioni sono rese ai
+                  sensi di legge dal legale rappresentante.
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {DOMANDE_REATI.map((domanda, indice) => {
+                    const risposta = risposteReati[indice];
+                    return (
+                      <li
+                        key={indice}
+                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-3 py-3 rounded-xl"
+                        style={{ background: '#ffffff' }}
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium" style={{ color: '#111111' }}>
+                            {domanda.titolo}
+                          </p>
+                          <p className="text-xs leading-relaxed" style={{ color: '#777777' }}>
+                            {domanda.testo}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          {(['si', 'no'] as const).map((valore) => {
+                            const attivo = risposta === valore;
+                            return (
+                              <button
+                                key={valore}
+                                onClick={() => rispondiReato(indice, valore)}
+                                className="text-xs px-4 py-1.5 rounded-full transition-colors duration-200"
+                                style={
+                                  attivo
+                                    ? valore === 'no'
+                                      ? { background: '#15803d', color: '#ffffff', border: '1.5px solid transparent' }
+                                      : { background: '#b42318', color: '#ffffff', border: '1.5px solid transparent' }
+                                    : { background: '#ffffff', color: '#333333', border: '1.5px solid #d5d5d5' }
+                                }
+                              >
+                                {valore === 'si' ? 'Sì' : 'No'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {codice && (
+              <div className="mt-5 px-4 sm:px-5 py-4 rounded-2xl" style={{ background: '#f2f2f2' }}>
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <p className="text-sm font-semibold" style={{ color: '#111111' }}>
                     Documentazione da predisporre
@@ -1037,6 +1153,84 @@ export default function App() {
                         completamento.
                       </p>
                     )}
+                  </div>
+                )}
+
+                {elaborazioneCompletata && !mostraSoci && (
+                  <button
+                    onClick={() => setMostraSoci(true)}
+                    className="mt-5 w-full text-center text-white text-sm px-7 py-3 rounded-full transition-all duration-200 hover:opacity-90 shadow-lg"
+                    style={STILE_SCURO}
+                  >
+                    Inserisci i dati dei tuoi soci per continuare
+                  </button>
+                )}
+
+                {elaborazioneCompletata && mostraSoci && (
+                  <div className="mt-5">
+                    <p className="text-sm font-semibold mb-1" style={{ color: '#111111' }}>
+                      Dati dei soci
+                    </p>
+                    <p className="text-xs mb-3" style={{ color: '#666666' }}>
+                      Aggiungi i soci della società. Puoi inserirne quanti ne servono.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      {soci.map((socio, indice) => (
+                        <div
+                          key={indice}
+                          className="px-3 py-3 rounded-xl"
+                          style={{ background: '#ffffff' }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium" style={{ color: '#666666' }}>
+                              Socio {indice + 1}
+                            </span>
+                            {soci.length > 1 && (
+                              <button
+                                onClick={() => rimuoviSocio(indice)}
+                                className="p-1 rounded-full transition-colors duration-200 hover:bg-black/5"
+                                aria-label={`Rimuovi socio ${indice + 1}`}
+                              >
+                                <X size={14} color="#444444" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input
+                              type="text"
+                              value={socio.nome}
+                              placeholder="Nome"
+                              onChange={(evento) => aggiornaSocio(indice, 'nome', evento.target.value)}
+                              className="w-full text-sm px-3 py-2 rounded-lg outline-none focus:border-[#111111] transition-colors duration-200"
+                              style={{ border: '1.5px solid #d5d5d5' }}
+                            />
+                            <input
+                              type="text"
+                              value={socio.cognome}
+                              placeholder="Cognome"
+                              onChange={(evento) => aggiornaSocio(indice, 'cognome', evento.target.value)}
+                              className="w-full text-sm px-3 py-2 rounded-lg outline-none focus:border-[#111111] transition-colors duration-200"
+                              style={{ border: '1.5px solid #d5d5d5' }}
+                            />
+                            <input
+                              type="text"
+                              value={socio.cf}
+                              placeholder="Codice Fiscale"
+                              onChange={(evento) => aggiornaSocio(indice, 'cf', evento.target.value)}
+                              className="w-full text-sm px-3 py-2 rounded-lg outline-none tracking-wide focus:border-[#111111] transition-colors duration-200"
+                              style={{ border: '1.5px solid #d5d5d5' }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={aggiungiSocio}
+                      className="mt-3 text-sm px-5 py-2 rounded-full transition-colors duration-200 hover:bg-black/5"
+                      style={STILE_CHIARO}
+                    >
+                      + Aggiungi socio
+                    </button>
                   </div>
                 )}
               </div>

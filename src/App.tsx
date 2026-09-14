@@ -242,9 +242,14 @@ const DOMANDE_REATI: { titolo: string; testo: string }[] = [
       'È stata pronunciata condanna definitiva o decreto penale irrevocabile per riciclaggio di proventi di attività criminose o finanziamento del terrorismo?',
   },
   {
-    titolo: 'Lavoro minorile e tratta di esseri umani',
+    titolo: 'Contenziosi con l\u2019INPS',
     testo:
-      'È stata pronunciata condanna definitiva o decreto penale irrevocabile per sfruttamento del lavoro minorile e altre forme di tratta di esseri umani?',
+      'Sono in essere contenziosi o pendenze con l\u2019INPS relativi al pagamento di contributi previdenziali o assistenziali?',
+  },
+  {
+    titolo: 'Contenziosi con l\u2019Agenzia delle Entrate',
+    testo:
+      'Sono in essere contenziosi o pendenze con l\u2019Agenzia delle Entrate relativi a imposte o tributi?',
   },
 ];
 
@@ -738,7 +743,7 @@ export default function App() {
                 className="mt-5 w-full text-center text-white text-sm px-7 py-3 rounded-full transition-all duration-200 hover:opacity-90 shadow-lg"
                 style={STILE_SCURO}
               >
-                Prosegui al caricamento documenti
+                Prosegui al caricamento dei documenti d&apos;identità
               </button>
               <p className="mt-3 text-xs text-center" style={{ color: '#8a8a8a' }}>
                 Oppure{' '}
